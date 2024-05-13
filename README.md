@@ -1,2 +1,5 @@
-# rl_project
-Project of reinforcement learning MLDL 2024
+# Reinforcement Learning project of Machine Learning and Deep Learning 2024
+
+## Students
+
+Student group:
