@@ -8,7 +8,7 @@ from time import time
 import shutil
 
 from train import train
-from test import test
+from test_agent import test
 
 import torch
 import gym

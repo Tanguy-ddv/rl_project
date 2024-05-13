@@ -9,7 +9,7 @@ Lorenzo Suppa, Vito Perrucci, Tanguy Dugas du Villard
 
 ## Code organisation overview
 The code presented here doesn't stick to the provided template. In order to make it easier to deal with multi-step training and data saving, a wrapper class named 'Session' has been created.
-In one single session, it is easy to train one, or multiple agents, load, reload and save models, as well as keep track on the metrics. The main part of the codes are the train.py and test.py functions, that are called at nearly every steps. The student is able to interact with the session using its methods
+In one single session, it is easy to train one, or multiple agents, load, reload and save models, as well as keep track on the metrics. The main part of the codes are the train.py and test_agent.py functions, that are called at nearly every steps. The student is able to interact with the session using its methods
 
 ## Tasks
 
