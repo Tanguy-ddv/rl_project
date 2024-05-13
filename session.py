@@ -101,9 +101,12 @@ class Session:
     
     def load_last_actor_critic(self, lr_actor: float=1e-3, lr_critic:float=1e-3, best:bool = True):
         best = "best_" if best else ""
-        actor_path = f"self.output_folder/{self.__step-1}_train/{best}model.mdl"
-        critic_path =  f"self.output_folder/{self.__step-1}_train/{best}critic.mdl"
-        self.load_actor_critic(actor_path, critic_path, lr_actor, lr_critic)
+        actor_path = f"self.output_folder/step_{self.__step-1}_train/{best}model.mdl"
+        critic_path =  f"self.output_folder/step_{self.__step-1}_train/{best}critic.mdl"
+        try:
+            self.load_actor_critic(actor_path, critic_path, lr_actor, lr_critic)
+        except FileNotFoundError:
+            self.load_actor_critic(None, None, lr_actor, lr_critic)
         
     def load_reinforce_with_baseline(
             self,
@@ -127,8 +130,12 @@ class Session:
 
     def load_last_reinforce(self, lr_actor: float = 1e-3, baseline: int = 0, best:bool = True):
         best = "best_" if best else ""
-        actor_path = f"self.output_folder/{self.__step-1}_train/{best}model.mdl"
-        self.load_reinforce_with_baseline(actor_path, lr_actor, baseline)
+        policy_path = f"self.output_folder/step_{self.__step-1}_train/{best}model.mdl"
+        try:
+            self.load_reinforce_with_baseline(policy_path, lr_actor, baseline)
+        except FileNotFoundError:
+            self.load_reinforce_with_baseline(None, lr_actor, baseline)
+
 
     def __save_metrics(self, rewards, final_rewards, states, episode_lengths, suffix: str):
 
@@ -205,7 +212,7 @@ class Session:
         self.__step += 1
         return len(episode_lengths), max_train_reward
 
-    def train_agent_with_checkpointing(self, early_stopping_threshold: int = 50, n_episodes: int = 1000, max_nb_restarts: int = 100):
+    def train_agent_with_checkpointing(self,  n_episodes: int = 1000, early_stopping_threshold: int = 50, max_nb_restarts: int = 100):
         """
         Train the agent with checkpointing: every time the agent don't improve during 'early_stopping_threshold'
         episodes, get back to the best policy and try again from this point.

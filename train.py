@@ -99,7 +99,7 @@ def train(
 			max_train_reward = train_reward
 			torch.save(agent.policy.state_dict(), "best_model.mdl")
 			with open("episode_of_best.txt", 'w') as f:
-				f.writable(str(episode))
+				f.write(str(episode))
 			if isinstance(agent, ActorCriticAgent):
 				torch.save(agent.critic.state_dict(), "best_critic.mdl")
 			if verbose:
