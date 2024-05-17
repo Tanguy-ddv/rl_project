@@ -128,13 +128,13 @@ class Session:
         
         self.infos = {'type' : _ACTOR_CRITIC, 'lr_policy' : lr_policy, 'baseline' : baseline}
 
-    def load_last_reinforce(self, lr_actor: float = 1e-3, baseline: int = 0, best:bool = True):
+    def load_last_reinforce(self, lr_policy: float = 1e-3, baseline: int = 0, best:bool = True):
         best = "best_" if best else ""
         policy_path = f"self.output_folder/step_{self.__step-1}_train/{best}model.mdl"
         try:
-            self.load_reinforce_with_baseline(policy_path, lr_actor, baseline)
+            self.load_reinforce_with_baseline(policy_path, lr_policy, baseline)
         except FileNotFoundError:
-            self.load_reinforce_with_baseline(None, lr_actor, baseline)
+            self.load_reinforce_with_baseline(None, lr_policy, baseline)
 
 
     def __save_metrics(self, rewards, final_rewards, states, episode_lengths, suffix: str):
@@ -156,6 +156,14 @@ class Session:
     def store_infos(self, infos):
         with open(self.output_folder + '/infos.txt', 'a') as f:
             f.write(str(infos) + '\n')
+    
+    def clear_outputs(self):
+        """
+        Clear the output folder of previous trainings.
+        """
+        self.__step = 0
+        shutil.rmtree(self.output_folder)
+        os.mkdir(self.output_folder)
 
     def test_agent(self, n_episode: int = 10, render: bool = True):
         """
@@ -180,9 +188,14 @@ class Session:
         Train the agent.
 
         Parameters:
+        ----
         n_espisode: The number of maximum episodes of the training
         early_stopping_threshold: If the agent don't improve the cumulated reward during this number of episodes, stop the training.
         
+        Return
+        ----
+        number_of_episodes: The number of episode of the training session (is n_episode with no early stopping)
+        best_reward: The best cumulated reward achieve by the agent during the training
         """
         if not self.agent_type:
             raise RuntimeError("No agent loaded yet, please load a agent first")
@@ -212,7 +225,7 @@ class Session:
         self.__step += 1
         return len(episode_lengths), max_train_reward
 
-    def train_agent_with_checkpointing(self,  n_episodes: int = 1000, early_stopping_threshold: int = 50, max_nb_restarts: int = 100):
+    def train_agent_with_early_stopping(self,  n_episodes: int = 1000, early_stopping_threshold: int = 50, max_nb_restarts: int = 100):
         """
         Train the agent with checkpointing: every time the agent don't improve during 'early_stopping_threshold'
         episodes, get back to the best policy and try again from this point.
@@ -224,7 +237,8 @@ class Session:
         """
         total_episodes = 0
         nb_restarts = 0
-        while total_episodes<n_episodes and nb_restarts < max_nb_restarts:
+        n_episodes += early_stopping_threshold
+        while total_episodes<n_episodes - early_stopping_threshold and nb_restarts < max_nb_restarts:
             
             if total_episodes != 0:
                 # Load the last best actor from the previous step.
@@ -235,16 +249,17 @@ class Session:
                         best=True
                     )
                 else:
-                    self.load_reinforce_with_baseline(
+                    self.load_last_reinforce(
                         lr_policy=self.infos['lr_policy'],
                         baseline=self.infos['baseline'],
                         best=True
                     )
             # Train it again until the threshold is reached
             this_step_n_episodes, _ = self.train_agent(n_episode=n_episodes - total_episodes, early_stopping_threshold = early_stopping_threshold)
-            total_episodes += this_step_n_episodes
+            total_episodes += this_step_n_episodes - early_stopping_threshold
             nb_restarts+=1
-    
+            print(f"Still {n_episodes - total_episodes - early_stopping_threshold} to go")
+
     def train_agent_with_defined_moving_baseline(self, n_episodes_per_baseline: int, baselines: list[int]):
         """
         Train the agent with a baseline evolving.
