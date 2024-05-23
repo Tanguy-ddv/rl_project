@@ -255,7 +255,7 @@ class Session:
                         best=True
                     )
             # Train it again until the threshold is reached
-            this_step_n_episodes, _ = self.train_agent(n_episode=n_episodes - total_episodes, early_stopping_threshold = early_stopping_threshold)
+            this_step_n_episodes, _ = self.train_agent(n_episodes - total_episodes, early_stopping_threshold)
             total_episodes += this_step_n_episodes - early_stopping_threshold
             nb_restarts+=1
             print(f"Still {n_episodes - total_episodes - early_stopping_threshold} to go")

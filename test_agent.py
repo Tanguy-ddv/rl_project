@@ -17,7 +17,6 @@ def test(
 
 		done = False
 		test_reward = 0
-		current_episode_length = 0
 		state = env.reset()
 		rewards.append([])
 		states.append([])
@@ -38,7 +37,7 @@ def test(
 			max_train_reward = test_reward
 
 		final_rewards.append(test_reward)
-		episode_lengths.append(current_episode_length)
+		episode_lengths.append(len(rewards[-1]))
 		print(f"Episode: {episode} | Return: {test_reward:.2f}")
 	
 	return rewards, episode_lengths, final_rewards, states, max_train_reward
