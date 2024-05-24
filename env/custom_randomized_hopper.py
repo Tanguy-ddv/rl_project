@@ -44,7 +44,7 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
             self.mass_min = np.zeros_like(self.mass_max)
 
         if 'std_dev_prop' in kwargs and self.domain == 'normal':
-            self.std_dev = kwargs['std_dev_prop']*self.original_masses
+            self.mass_std_dev = kwargs['std_dev_prop']*self.original_masses
         
     def reset_parameters(self):
         """Reset the masses, with a randomization or not."""
