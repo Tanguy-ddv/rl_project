@@ -27,7 +27,7 @@ def main():
         'clip_range': 0.25
     }
     model = PPO("MlpPolicy", train_env, verbose=1, **best_params)
-    model.learn(total_timesteps=1000)
+    model.learn(total_timesteps=100000)
 
     vec_env = model.get_env()
     print('Dynamics parameters:', train_env.get_parameters())  # masses of each link of the Hopper

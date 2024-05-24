@@ -181,14 +181,14 @@ gym.envs.register(
     id="CustomHopper-normal-v0",
     entry_point="%s:CustomHopper" % __name__,
     max_episode_steps=500,
-    kwargs={"domain": "uniform"}
+    kwargs={"domain": "uniform", "max_prop" : 2}
 )
 
 gym.envs.register(
     id="CustomHopper-uniform-v0",
     entry_point="%s:CustomHopper" % __name__,
     max_episode_steps=500,
-    kwargs={"domain": "normal", "max_prop" : 2}
+    kwargs={"domain": "normal", "std_dev_prop" : 0.2}
 )
 
 def register_uniform(lower_bound, upper_bound, name):
