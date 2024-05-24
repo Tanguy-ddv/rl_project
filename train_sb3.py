@@ -10,7 +10,7 @@ numpy.save
 from env.custom_randomized_hopper import *
 
 from stable_baselines3 import PPO
-register_normal(0.1, "testuniform-v0")
+register_uniform(1,4, "testuniform-v0")
 
 def main():
     train_env = gym.make("testuniform-v0")
@@ -27,7 +27,7 @@ def main():
         'clip_range': 0.25
     }
     model = PPO("MlpPolicy", train_env, verbose=1, **best_params)
-    model.learn(total_timesteps=100000)
+    model.learn(total_timesteps=100_000)
 
     vec_env = model.get_env()
     print('Dynamics parameters:', train_env.get_parameters())  # masses of each link of the Hopper
@@ -52,7 +52,7 @@ def main():
 if __name__ == '__main__':
     main()
 
-    test_env = gym.make("testuniform-v0")
+    test_env = gym.make("CustomHopper-target-v0")
 
     print('State space:', test_env.observation_space)  # state-space
     print('Action space:', test_env.action_space)  # action-space

@@ -198,6 +198,14 @@ def register_uniform(lower_bound, upper_bound, name):
     max_episode_steps=500,
     kwargs={"domain": "uniform", "lower": lower_bound, "upper" : upper_bound}
 )
+    
+def register_uniform_with_prop(max_prop, name):
+    gym.envs.register(
+    id=name,
+    entry_point="%s:CustomHopper" % __name__,
+    max_episode_steps=500,
+    kwargs={"domain": "uniform", "max_prop": max_prop}
+)
 
 def register_normal(std_dev_prop, name):
     gym.envs.register(
