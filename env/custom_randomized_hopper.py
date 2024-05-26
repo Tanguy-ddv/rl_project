@@ -12,7 +12,7 @@ from typing import Literal
 
 class CustomHopper(MujocoEnv, utils.EzPickle):
     def __init__(self,
-                 domain: Literal['uniform', 'normal', 'source', 'target', None] = None,
+                 domain: Literal['uniform', 'normal', 'source', 'target', 'target2', None] = None,
                  **kwargs):
         MujocoEnv.__init__(self, 4)
         utils.EzPickle.__init__(self)
@@ -23,6 +23,8 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
 
         if domain != 'target':  # Source environment has an imprecise torso mass (1kg shift)
             self.sim.model.body_mass[1] -= 1.0
+        if domain == 'target2':
+            self.sim.model.body_mass[2] += 2 # The target 2 have a +2 kg of torso mass
         
         self.torso_mass = deepcopy(self.sim.model.body_mass[1])
 
@@ -175,6 +177,13 @@ gym.envs.register(
         entry_point="%s:CustomHopper" % __name__,
         max_episode_steps=500,
         kwargs={"domain": "target"}
+)
+
+gym.envs.register(
+        id="CustomHopper-target2-v0",
+        entry_point="%s:CustomHopper" % __name__,
+        max_episode_steps=500,
+        kwargs={"domain": "target2"}
 )
 
 gym.envs.register(
