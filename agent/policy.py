@@ -6,39 +6,34 @@ from torch.distributions import Normal
 class Policy(torch.nn.Module):
     """The policy of an agent."""
     
-    def __init__(self, state_space, action_space):
+    def __init__(self, state_space: int, action_space: int, hidden: int = 64):
         super().__init__()
-        self.state_space = state_space
-        self.action_space = action_space
-        self.hidden = 64
-        self.tanh = torch.nn.Tanh()
 
-        self.fc1_actor = torch.nn.Linear(state_space, self.hidden)
-        self.fc2_actor = torch.nn.Linear(self.hidden, self.hidden)
-        self.fc3_actor_mean = torch.nn.Linear(self.hidden, action_space)
+        self.fc1 = torch.nn.Linear(state_space, hidden)
+        self.fc2 = torch.nn.Linear(hidden, hidden)
+        self.fc3 = torch.nn.Linear(hidden, action_space)
 
         # Learned standard deviation for exploration at training time 
         self.sigma_activation = F.softplus
         init_sigma = 0.5
-        self.sigma = torch.nn.Parameter(torch.zeros(self.action_space)+init_sigma)
+        self.sigma = torch.nn.Parameter(torch.zeros(action_space)+init_sigma)
 
-        self.init_weights()
-
-
-    def init_weights(self):
-        for m in self.modules():
-            if type(m) is torch.nn.Linear:
-                torch.nn.init.normal_(m.weight)
-                torch.nn.init.zeros_(m.bias)
+        self._init_weights()
 
 
-    def forward(self, x) -> Normal:
+    def _init_weights(self):
+        torch.nn.init.kaiming_normal_(self.fc1.weight)
+        torch.nn.init.kaiming_normal_(self.fc2.weight)
+        torch.nn.init.kaiming_normal_(self.fc3.weight)
 
-        x_actor = self.tanh(self.fc1_actor(x))
-        x_actor = self.tanh(self.fc2_actor(x_actor))
-        action_mean = self.fc3_actor_mean(x_actor)
+
+    def forward(self, state) -> Normal:
+
+        x = F.tanh(self.fc1(state))
+        x = F.tanh(self.fc2(x))
+        action_mean = self.fc3(x)
 
         sigma = self.sigma_activation(self.sigma)
-        normal_dist = Normal(action_mean, sigma)
+        action_dist = Normal(action_mean, sigma)
 
-        return normal_dist
+        return action_dist

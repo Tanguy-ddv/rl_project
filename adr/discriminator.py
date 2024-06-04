@@ -14,6 +14,7 @@ Training: Use generated trajectories to train:
 
 from torch import nn
 import torch.nn.functional as F
+from agent.agent import Agent
 import torch
 
 def separate_trajectory(
@@ -24,16 +25,23 @@ def separate_trajectory(
     trajs = []
     for state, action, next_state in zip(states, actions, next_states):
         trajs.append(torch.concatenate((state, action, next_state)))
-    return torch.concatenate(trajs, dim=1)
+    return torch.stack(trajs)
 
-class DiscriminatorNN(nn.Module):
+class DiscriminatorNetwork(nn.Module):
 
     def __init__(self, state_dim, action_dim, hidden=64):
-        super(nn.Module, self).__init__()
+        super().__init__()
         input_dim = state_dim + action_dim + state_dim
         self.l1 = nn.Linear(input_dim, hidden)
         self.l2 = nn.Linear(hidden, hidden)
         self.l3 = nn.Linear(hidden, 1)
+    
+        self._init_weights()
+
+    def _init_weights(self):
+        torch.nn.init.kaiming_normal_(self.l1.weight)
+        torch.nn.init.kaiming_normal_(self.l2.weight)
+        torch.nn.init.kaiming_normal_(self.l3.weight)
 
     def forward(self, x: torch.Tensor):
         x = F.relu(self.l1(x))
@@ -42,33 +50,59 @@ class DiscriminatorNN(nn.Module):
         x = F.sigmoid(self.l3(x))
         return x
     
-class Discriminator():
+class Discriminator(Agent):
 
     def __init__(self, state_dim, action_dim, hidden=64, lr=1e-3):
-        self.network = DiscriminatorNN(state_dim, action_dim, hidden=hidden)
-        self.optimizer = torch.optim.Adam(self.network.parameters(),lr=lr)
-        self.criterion = nn.BCELoss()
+        super().__init__(DiscriminatorNetwork(state_dim, action_dim, hidden=hidden), lr=lr)
+
+        self.ref_states = []
+        self.ref_next_states = []
+        self.ref_action_log_probs = []
+        self.ref_rewards = []
+        self.ref_done = []
+        self.ref_actions = []
 
     def reward(self, states: list[torch.Tensor], actions: list[torch.Tensor], next_states: list[torch.Tensor]):
-        probs = self.network(separate_trajectory(states, actions, next_states))
+        probs = self.policy(separate_trajectory(states, actions, next_states))
         return torch.log(probs.mean()+1e-8)
     
-    def train(
-        self, 
-        rd_states: list[torch.Tensor], 
-        rd_actions: list[torch.Tensor], 
-        rd_next_states: list[torch.Tensor],
-        ref_states: list[torch.Tensor], 
-        ref_actions: list[torch.Tensor], 
-        ref_next_states: list[torch.Tensor]
-    ):
+    def update_policy(self):
 
-        rd_probs = self.network(separate_trajectory(rd_states, rd_actions, rd_next_states))
-        ref_probs = self.network(separate_trajectory(ref_states, ref_actions, ref_next_states))
+        rd_probs = self.policy(separate_trajectory(self.states, self.actions, self.next_states))
+        ref_probs = self.policy(separate_trajectory(self.ref_states, self.ref_actions, self.ref_next_states))
 
-        self.optimizer.zero_grad()
+        self.policy_optimizer.zero_grad()
 
-        loss = self.criterion(rd_probs, torch.ones_like(rd_probs)) + self.criterion(ref_probs, torch.zeros_like(ref_probs))
+        loss = F.binary_cross_entropy(rd_probs, torch.ones_like(rd_probs))
+        + F.binary_cross_entropy(ref_probs, torch.zeros_like(ref_probs))
+
         loss.backward()
 
-        self.optimizer.step()
+        self.policy_optimizer.step()
+    
+    def clear_history(self):
+        """Clear the history of the previous actions"""
+        # Clear the trajectory generated in the random.
+        self.states.clear()
+        self.next_states.clear()
+        self.action_log_probs.clear()
+        self.rewards.clear()
+        self.done.clear()
+        self.actions.clear()
+
+        # Clear the trajectory generated in the reference.
+        self.ref_states.clear()
+        self.ref_next_states.clear()
+        self.ref_action_log_probs.clear()
+        self.ref_rewards.clear()
+        self.ref_done.clear()
+        self.ref_actions.clear()
+
+    def store_ref_outcome(self, state, next_state, action_log_prob, reward, done, action):
+        """Save the outcome on the history"""
+        self.ref_states.append(torch.from_numpy(state).float())
+        self.ref_next_states.append(torch.from_numpy(next_state).float())
+        self.ref_action_log_probs.append(action_log_prob)
+        self.ref_rewards.append(torch.Tensor([reward]))
+        self.ref_done.append(done)
+        self.ref_actions.append(torch.from_numpy(action).float())

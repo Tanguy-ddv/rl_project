@@ -1,38 +1,36 @@
-from .policy import Policy
-from .agent import Agent, discount_rewards
+from .policy import Policy as Actor
+from .agent import Agent
 
-import numpy as np
 import torch
+import torch.nn.functional as F
 
 class Critic(torch.nn.Module):
 
-    def __init__(self, state_space: int):
+    def __init__(self, state_space: int, hidden=64):
         super().__init__()
         self.state_space = state_space
-        self.hidden = 64
-        self.tanh = torch.nn.Tanh()
 
-        self.fc1_critic = torch.nn.Linear(state_space, self.hidden)
-        self.fc2_critic = torch.nn.Linear(self.hidden, self.hidden)
-        self.fc3_critic = torch.nn.Linear(self.hidden, 1)
+        self.fc1 = torch.nn.Linear(state_space, hidden)
+        self.fc2 = torch.nn.Linear(hidden, hidden)
+        self.fc3 = torch.nn.Linear(hidden, 1)
 
-        self.init_weights()
+        self._init_weights()
     
-    def forward(self, x):
-        x_critic = self.tanh(self.fc1_critic(x))
-        x_critic = self.tanh(self.fc2_critic(x_critic))
-        value_function = self.fc3_critic(x_critic)
+    def forward(self, state):
+        x = F.tanh(self.fc1(state))
+        x = F.tanh(self.fc2(x))
+        value_function = self.fc3(x)
         return value_function
 
-    def init_weights(self):
-        for m in self.modules():
-            if type(m) is torch.nn.Linear:
-                torch.nn.init.normal_(m.weight)
-                torch.nn.init.zeros_(m.bias)
+    def _init_weights(self):
+        torch.nn.init.kaiming_normal_(self.fc1.weight)
+        torch.nn.init.kaiming_normal_(self.fc2.weight)
+        torch.nn.init.kaiming_normal_(self.fc3.weight)
 
 class ActorCriticAgent(Agent):
-    def __init__(self, policy: Policy, critic: Critic, device='cpu', lr_policy: float = 1e-3, lr_critic: float=1e-3):
-        super().__init__(policy, device, lr_policy)
+
+    def __init__(self, actor: Actor, critic: Critic, device='cpu', lr_actor: float = 1e-3, lr_critic: float=1e-3):
+        super().__init__(actor, device, lr_actor)
 
         self.critic = critic
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=lr_critic)
@@ -46,21 +44,26 @@ class ActorCriticAgent(Agent):
         rewards = torch.stack(self.rewards, dim=0).to(self.device).squeeze(-1)
         dones = torch.Tensor(self.done).to(self.device)
 
-        loss_policy = []
-        # Compute the loss for the policy and the value function
-        for R, log_prob, state, next_state, done in zip(rewards, action_log_probs, states, next_states, dones):
-            predicted_value = self.critic(state)
-            target_value = R + (self.gamma*self.critic(next_state))*int(not done)
-            loss_policy.append(-log_prob*(target_value - predicted_value).detach())
+        # Compute the values
+        with torch.no_grad():
+            next_state_values = self.critic(next_states).squeeze(-1)
+            target_values = (rewards + (1 - dones)*self.gamma*next_state_values).detach()
+        state_values = self.critic(states).squeeze(-1)
+        advantage = target_values - state_values
 
-        # Update the policy
-        loss_policy = torch.stack(loss_policy, dim=0).sum()
+        # Compute the losses
+        actor_loss = -(action_log_probs * advantage.detach()).mean()
+        critic_loss = F.mse_loss(state_values, target_values)
+
+        # Update the actor
         self.policy_optimizer.zero_grad()
-        loss_policy.backward()
+        actor_loss.backward()
         self.policy_optimizer.step()
 
-        # update the value function
-        loss_critic = torch.nn.MSELoss()(predicted_value, target_value)
+        # Update the critic
         self.critic_optimizer.zero_grad()
-        loss_critic.backward()
+        critic_loss.backward()
         self.critic_optimizer.step()
+
+        # Remove the history at the end of the update
+        self.clear_history()

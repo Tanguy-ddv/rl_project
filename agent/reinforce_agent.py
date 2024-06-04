@@ -24,3 +24,5 @@ class ReinforceAgent(Agent):
         self.policy_optimizer.zero_grad()
         loss.backward()
         self.policy_optimizer.step()
+
+        self.clear_history()

@@ -1,6 +1,6 @@
 
 from .policy import Policy
-
+from abc import abstractmethod, ABC
 import torch
 
 def discount_rewards(r, gamma):
@@ -11,7 +11,7 @@ def discount_rewards(r, gamma):
         discounted_r[t] = running_add
     return discounted_r
 
-class Agent:
+class Agent(ABC):
 
     def __init__(self, policy: Policy, device='cpu', lr: float = 1e-3, gamma: float=0.99):
         self.device = device
@@ -23,9 +23,11 @@ class Agent:
         self.states = []
         self.next_states = []
         self.action_log_probs = []
+        self.actions = []
         self.rewards = []
         self.done = []
     
+    @abstractmethod
     def update_policy(self):
         """Update the policy at the end of an episode based on the reward obtained during it."""
 
@@ -36,6 +38,7 @@ class Agent:
         self.action_log_probs.clear()
         self.rewards.clear()
         self.done.clear()
+        self.actions = []
 
     def get_action(self, state, evaluation=False):
         """ state -> action (3-d), action_log_densities """
@@ -55,11 +58,13 @@ class Agent:
             return action, action_log_prob
 
 
-    def store_outcome(self, state, next_state, action_log_prob, reward, done):
+    def store_outcome(self, state, next_state, action_log_prob, reward, done, action=None):
         """Save the outcome on the history"""
         self.states.append(torch.from_numpy(state).float())
         self.next_states.append(torch.from_numpy(next_state).float())
         self.action_log_probs.append(action_log_prob)
         self.rewards.append(torch.Tensor([reward]))
         self.done.append(done)
+        if action is not None:
+            self.actions.append(torch.from_numpy(action))
 
