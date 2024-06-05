@@ -37,7 +37,7 @@ class ADRSession:
             self.particles.append(Particle(self.nparams, self.mean_values, hidden, lr))
             self.envs.append(gym.make("ADRHopper-v0"))
     
-    def train(self, n_episodes: int):
+    def train(self, n_episodes: int, batch_size:int = 1):
         """
         Train the actor-critic agent on ADR environements.
         """
@@ -90,8 +90,9 @@ class ADRSession:
                 # Update the particle
                 discriminator_reward = self.discriminator.reward(states, actions, next_states)
                 particle.store_outcome(parameters.detach().numpy(), particle.values.detach().numpy(), log_probs, discriminator_reward, False)
-                particle.update_policy()
-                particle.clear_history()
+                if episode%batch_size == 0:
+                    particle.update_policy()
+                    particle.clear_history()
             
             # Update the discriminator
             self.discriminator.update_policy()
@@ -101,5 +102,5 @@ class ADRSession:
 
         
 if __name__ == '__main__':
-    s = ADRSession(2)
-    s.train(2)
+    s = ADRSession(10)
+    s.train(100, batch_size=1)

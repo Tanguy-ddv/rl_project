@@ -24,7 +24,6 @@ class ParticleNN(nn.Module):
         self.mean_values = torch.tensor(mean_values)
 
         self.l1 = nn.Linear(nparams, hidden)
-        self.l2 = nn.Linear(hidden, hidden)
         self.l3 = nn.Linear(hidden, nparams)
 
         self.sigma_activation = F.softplus
@@ -35,13 +34,11 @@ class ParticleNN(nn.Module):
     
     def _init_weights(self):
         torch.nn.init.kaiming_normal_(self.l1.weight)
-        torch.nn.init.kaiming_normal_(self.l2.weight)
         torch.nn.init.kaiming_normal_(self.l3.weight)
 
     
     def forward(self, x):
         x = F.relu(self.l1(x))
-        x = F.relu(self.l2(x))
         # Clip the value between - mean_values and + mean_values
         x = F.tanh(self.l3(x))/(np.pi/2)*self.mean_values
 
