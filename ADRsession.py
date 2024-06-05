@@ -6,6 +6,7 @@ from adr.particle import Particle
 from adr import hopper_for_adr # To have the adr registered.
 from env import custom_hopper # To have the target registered
 from adr.discriminator import Discriminator
+import torch
 import gym
 from agent.actor_critic_agent import ActorCriticAgent, Actor, Critic
 
@@ -55,7 +56,7 @@ class ADRSession:
                 state, reward, done, _info = self.ref_env.step(action.detach().cpu().numpy())
                 self.agent.store_outcome(previous_state, state, action_probabilities, reward, done)
 
-                self.discriminator.store_ref_outcome(previous_state, state, action_probabilities, reward, done, action)
+                self.discriminator.store_ref_outcome(previous_state, state, action_probabilities, reward, done, action.numpy())
 
             # Test and train on the reference envs.
 
@@ -76,11 +77,11 @@ class ADRSession:
 
                     state, reward, done, _info = env.step(action.detach().cpu().numpy())
                     self.agent.store_outcome(previous_state, state, action_probabilities, reward, done)
-                    self.discriminator.store_outcome(previous_state, state, action_probabilities, reward, done, action)
+                    self.discriminator.store_outcome(previous_state, state, action_probabilities, reward, done, action.numpy())
                     
-                    states.append(previous_state)
+                    states.append(torch.from_numpy(previous_state).float())
                     actions.append(action)
-                    next_states.append(state)
+                    next_states.append(torch.from_numpy(state).float())
 
                 # Update the agent at the end of the episode
                 self.agent.update_policy()
@@ -88,7 +89,7 @@ class ADRSession:
 
                 # Update the particle
                 discriminator_reward = self.discriminator.reward(states, actions, next_states)
-                particle.store_outcome(parameters, particle.values, log_probs, discriminator_reward, False)
+                particle.store_outcome(parameters.detach().numpy(), particle.values.detach().numpy(), log_probs, discriminator_reward, False)
                 particle.update_policy()
                 particle.clear_history()
             

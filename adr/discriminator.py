@@ -13,6 +13,7 @@ Training: Use generated trajectories to train:
 """
 
 from torch import nn
+import numpy as np
 import torch.nn.functional as F
 from agent.agent import Agent
 import torch
@@ -105,4 +106,4 @@ class Discriminator(Agent):
         self.ref_action_log_probs.append(action_log_prob)
         self.ref_rewards.append(torch.Tensor([reward]))
         self.ref_done.append(done)
-        self.ref_actions.append(action.float())
+        self.ref_actions.append(torch.from_numpy(action).float())

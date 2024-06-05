@@ -44,7 +44,8 @@ class Agent(ABC):
         """ state -> action (3-d), action_log_densities """
         x = torch.from_numpy(state).float().to(self.device)
 
-        normal_dist = self.policy(x)
+        normal_dist: torch.distributions.Normal = self.policy(x)
+        # In the case of different policies that directly return an action and not a distribution
 
         if evaluation:  # Return mean
             return normal_dist.mean, None
@@ -66,5 +67,5 @@ class Agent(ABC):
         self.rewards.append(torch.Tensor([reward]))
         self.done.append(done)
         if action is not None:
-            self.actions.append(action)
+            self.actions.append(torch.from_numpy(action).float())
 

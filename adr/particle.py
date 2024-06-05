@@ -27,6 +27,10 @@ class ParticleNN(nn.Module):
         self.l2 = nn.Linear(hidden, hidden)
         self.l3 = nn.Linear(hidden, nparams)
 
+        self.sigma_activation = F.softplus
+        init_sigma = mean_values.mean()/20
+        self.sigma = torch.nn.Parameter(torch.zeros(nparams)+init_sigma)
+
         self._init_weights()
     
     def _init_weights(self):
@@ -40,7 +44,11 @@ class ParticleNN(nn.Module):
         x = F.relu(self.l2(x))
         # Clip the value between - mean_values and + mean_values
         x = F.tanh(self.l3(x))/(np.pi/2)*self.mean_values
-        return x
+
+        sigma = self.sigma_activation(self.sigma)
+        delta_dist = torch.distributions.Normal(x, sigma)
+
+        return delta_dist
 
 class Particle(ActorCriticAgent):
 
@@ -55,8 +63,8 @@ class Particle(ActorCriticAgent):
 
     def update_values(self):
 
-        delta, log_probs = self.get_action(self.values)
+        delta, log_probs = self.get_action(self.values.detach().numpy())
         self.values += delta
         self.values = torch.clip(self.values, torch.zeros_like(self.policy.mean_values), self.policy.mean_values*2)
-        
+
         return delta, log_probs
