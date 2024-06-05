@@ -105,4 +105,4 @@ class Discriminator(Agent):
         self.ref_action_log_probs.append(action_log_prob)
         self.ref_rewards.append(torch.Tensor([reward]))
         self.ref_done.append(done)
-        self.ref_actions.append(torch.from_numpy(action).float())
+        self.ref_actions.append(action.float())

@@ -101,3 +101,4 @@ class ADRSession:
         
 if __name__ == '__main__':
     s = ADRSession(2)
+    s.train(2)

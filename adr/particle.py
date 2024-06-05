@@ -51,7 +51,7 @@ class Particle(ActorCriticAgent):
         )
 
         # Initialize the values
-        self.values = torch.distributions.Uniform(torch.zeros_like(self.policy.mean_values), self.policy.mean_values*2)
+        self.values = torch.distributions.Uniform(torch.zeros_like(self.policy.mean_values), self.policy.mean_values*2).sample()
 
     def update_values(self):
 

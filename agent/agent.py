@@ -66,5 +66,5 @@ class Agent(ABC):
         self.rewards.append(torch.Tensor([reward]))
         self.done.append(done)
         if action is not None:
-            self.actions.append(torch.from_numpy(action))
+            self.actions.append(action)
 
