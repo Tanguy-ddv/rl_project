@@ -55,8 +55,8 @@ class Particle(ActorCriticAgent):
 
     def update_values(self):
 
-        delta = self.policy(self.values)
+        delta, log_probs = self.get_action(self.values)
         self.values += delta
         self.values = torch.clip(self.values, torch.zeros_like(self.policy.mean_values), self.policy.mean_values*2)
         
-        return delta
+        return delta, log_probs
