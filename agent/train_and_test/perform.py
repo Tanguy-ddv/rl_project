@@ -6,7 +6,8 @@ import numpy as np
 
 from agent.actor_critic_agent import Agent
 
-def perform(env, agent: Agent, store: bool = True, render: bool = False) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray], float, int]:
+def perform(env, agent: Agent, store: bool = True, render: bool = False
+			) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray], float, int, list[float]]:
 	"""
 	Perform one episode for the agent on the env.
 	Store the outcome at each step.
@@ -26,6 +27,7 @@ def perform(env, agent: Agent, store: bool = True, render: bool = False) -> tupl
 	states: A list of np.ndarray being the list of states of the episode.
 	cumulated_reward: The cumulated reward.
 	episode_length: The length of the episode.
+	actions_probabilities: The list of the log-probability of the actions
 	"""
 
 	# Reset the training data
@@ -35,14 +37,13 @@ def perform(env, agent: Agent, store: bool = True, render: bool = False) -> tupl
 	actions = []
 	previous_states = []
 	states = []
+	actions_probabilities = []
 
 	state = env.reset()
 
 	while not done:  # Loop until the episode is over
 
 		action, action_probabilities = agent.get_action(state)
-		previous_state = state
-
 		previous_state = state
 
 		state, reward, done, _info = env.step(action.detach().cpu().numpy())
@@ -55,7 +56,8 @@ def perform(env, agent: Agent, store: bool = True, render: bool = False) -> tupl
 		states.append(state)
 		actions.append(action.numpy())
 		previous_states.append(previous_state)
+		actions_probabilities.append(action_probabilities)
 
 		episode_length +=1
 
-	return previous_states, actions, states, cumulated_reward, episode_length
+	return previous_states, actions, states, cumulated_reward, episode_length, actions_probabilities
