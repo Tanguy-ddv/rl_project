@@ -87,7 +87,7 @@ class Session(ABC):
         except FileExistsError:
             pass
 
-    def _save_metrics(self, rewards: list[float], episode_lengths: list[float | int], suffix: str, episode_of_best: int = None):
+    def _save_metrics(self, rewards: list[float], episode_lengths: list[float], suffix: str, episode_of_best: int = None, other_dict: dict = {}):
 
         self._make_step_dir(suffix)
 
@@ -100,6 +100,10 @@ class Session(ABC):
         if episode_of_best is not None:
             with open(f"{self.output_folder}/step_{self._step}_{suffix}/episode_of_best.json",'w') as f:
                 json.dump(episode_of_best, f)
+        
+        for metric in other_dict:
+            with open(f"{self.output_folder}/step_{self._step}_{suffix}/{metric}.json",'w') as f:
+                json.dump(other_dict[metric], f)
     
     def store_infos(self, infos):
         with open(self.output_folder + '/infos.txt', 'a') as f:

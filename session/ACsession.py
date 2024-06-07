@@ -5,8 +5,10 @@ Create a session and call its methods to create, train and test an agent.
 
 from typing import Literal
 from time import time
+import os
 
 from agent.train_and_test import train, test
+import shutil
 
 import torch
 import gym
@@ -85,11 +87,11 @@ class ACSession(Session):
         starting_time = time()
 
         # Train the model
-        rewards, episode_lengths, final_rewards, states, max_train_reward = train(
+        episode_lengths, rewards, max_train_reward, best_model_episode = train(
             self.env, self.agent, n_episode, self._verbose, early_stopping_threshold, f"{self.output_folder}/step_{self._step}_train/"
         )
         # Save the metrics
-        self._save_metrics(rewards, final_rewards, states, episode_lengths, suffix='train')
+        self._save_metrics(rewards, episode_lengths, 'train', best_model_episode)
 
         print(f"End of session step {self._step}, Lasted {(time() - starting_time):.2f} s, Best reward: {max_train_reward:.2f}")
         self._step += 1
@@ -129,12 +131,43 @@ class ACSession(Session):
             n_train_episodes: int = 1000,
             test_every: int = 100,
             nb_test: int = 10,
+            seed: int = None
             ):
         """
         Train the agent and test it on another env during the training to see the evolution of the performance on both envs.
         """
 
         test_env = gym.make(other_env_path)
-        self._make_step_dir('train')
+        suffix = 'train_and_test'
+        self._make_step_dir(suffix)
 
+        starting_time = time()
+
+        rewards = []
+        episode_lengths = []
+        test_rewards = []
+        max_train_reward = None
+        best_model_episode = 0
+
+        for group in range(n_train_episodes//test_every):
+
+            os.mkdir(f"{self.output_folder}/step_{self._step}_{suffix}/group_{group}/")
+
+            # Train the model
+            gp_episode_lengths, gp_rewards, gp_max_train_reward, gp_best_model_episode = train(
+                self.env, self.agent, test_every, self._verbose, None, f"{self.output_folder}/step_{self._step}_{suffix}/group_{group}/"
+            )
+
+            rewards.extend(gp_rewards)
+            episode_lengths.extend(gp_episode_lengths)
+            if max_train_reward is None or max_train_reward < gp_max_train_reward:
+                max_train_reward = gp_max_train_reward
+                best_model_episode = gp_best_model_episode
+            
+            # Test the model
+            gp_rewards, _, _ = test(test_env, self.agent, nb_test, False, seed)
+            test_rewards.append(sum(gp_rewards)/nb_test)
         
+        self._save_metrics(rewards, episode_lengths, suffix, best_model_episode, {'test_reward':test_rewards})
+        print(f"End of session step {self._step}, Lasted {(time() - starting_time):.2f} s, Best reward: {max_train_reward:.2f}")
+        self._step += 1

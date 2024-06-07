@@ -39,7 +39,7 @@ def train(
 	max_train_reward: The bets cumulated reward achieve during the training.
 	best_model_episode: The episode of the best model.
 	"""
-	PRINT_EVERY = 1e3//verbose if verbose else 0
+	PRINT_EVERY = 1000//verbose if verbose else 0
 
 	# Initilisation for the data measurement.
 	rewards = []
@@ -55,7 +55,7 @@ def train(
 	# Start of the training loop
 	for episode in range(n_episode):
 		# Train one episode
-		_, _, _, train_reward, episode_length = perform(env, agent, True)
+		_, _, _, train_reward, episode_length, _ = perform(env, agent, True)
 
 		# Update the agent at the end of the episode
 		agent.update_policy()

@@ -17,18 +17,18 @@ def test(
 		env.seed(seed)
 	rewards = []
 	episode_lengths = []
-	max_train_reward = None
+	max_test_reward = None
 
 	for _ in range(n_episodes):
 
-		_, _, _, test_reward, episode_length = perform(env, agent, False, render)
+		_, _, _, test_reward, episode_length, _ = perform(env, agent, False, render)
 
-		if max_train_reward is None or test_reward > max_train_reward:
-			max_train_reward = test_reward
+		if max_test_reward is None or test_reward > max_test_reward:
+			max_test_reward = test_reward
 
 		rewards.append(test_reward)
 		episode_lengths.append(episode_length)
 	
-	print(f"Mean return: {np.mean(test_reward):.2f} | Std return: {np.std(test_reward):.2f} | Max return: {max_train_reward:.2f} | Mean episode length: {np.mean(episode_lengths)}")
+	print(f"Mean return: {np.mean(rewards):.2f} | Std return: {np.std(rewards):.2f} | Max return: {max_test_reward:.2f} | Mean episode length: {np.mean(episode_lengths)}")
 	
-	return rewards, episode_lengths, max_train_reward
+	return rewards, episode_lengths, max_test_reward
