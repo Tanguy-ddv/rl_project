@@ -37,15 +37,17 @@ class ADRSession:
             self.particles.append(Particle(self.nparams, self.mean_values, hidden, lr))
             self.envs.append(gym.make("ADRHopper-v0"))
     
-    def train(self, n_episodes: int, batch_size:int = 1):
+    def train(self, n_episodes_per_env: int):
         """
         Train the actor-critic agent on ADR environements.
         """
 
         # Start of the training loop
-        for episode in range(n_episodes):
+        for episode in range(n_episodes_per_env):
 
             # Test the agent on the ref environement
+            ref_reward = 0
+            rd_rewards = []
             done = False
             state = self.ref_env.reset()
             while not done:
@@ -55,9 +57,10 @@ class ADRSession:
 
                 state, reward, done, _info = self.ref_env.step(action.detach().cpu().numpy())
                 self.agent.store_outcome(previous_state, state, action_probabilities, reward, done)
+                ref_reward += reward
 
                 self.discriminator.store_ref_outcome(previous_state, state, action_probabilities, reward, done, action.numpy())
-
+            print(f"Episode {episode}: Ref R = {ref_reward:.2f}")
             # Test and train on the reference envs.
 
             for particle, env in zip(self.particles, self.envs):
@@ -70,6 +73,7 @@ class ADRSession:
                 states, actions, next_states = [], [], []
                 # Reset the training data
                 done = False
+                rd_reward = 0
                 while not done:  # Loop until the episode is over
 
                     action, action_probabilities = self.agent.get_action(state)
@@ -78,7 +82,8 @@ class ADRSession:
                     state, reward, done, _info = env.step(action.detach().cpu().numpy())
                     self.agent.store_outcome(previous_state, state, action_probabilities, reward, done)
                     self.discriminator.store_outcome(previous_state, state, action_probabilities, reward, done, action.numpy())
-                    
+                    rd_reward += reward
+
                     states.append(torch.from_numpy(previous_state).float())
                     actions.append(action)
                     next_states.append(torch.from_numpy(state).float())
@@ -90,17 +95,18 @@ class ADRSession:
                 # Update the particle
                 discriminator_reward = self.discriminator.reward(states, actions, next_states)
                 particle.store_outcome(parameters.detach().numpy(), particle.values.detach().numpy(), log_probs, discriminator_reward, False)
-                if episode%batch_size == 0:
-                    particle.update_policy()
-                    particle.clear_history()
+                particle.update_policy()
+                particle.clear_history()
+                rd_rewards.append(rd_reward)
             
             # Update the discriminator
             self.discriminator.update_policy()
             self.discriminator.clear_history()
-        
-        
+            print(f"Episode {episode}: Rdm R = {(sum(rd_rewards)/self.nenvs):.2f}")
 
-        
+
 if __name__ == '__main__':
-    s = ADRSession(10)
-    s.train(100, batch_size=1)
+    # Remember: then total number of episode is the nenvs*n_episodes_per_env
+    s = ADRSession(nenvs=10)
+    s.train(n_episodes_per_env=100)
+    # TODO: proper batching (bc about )
