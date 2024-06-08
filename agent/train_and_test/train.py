@@ -18,7 +18,8 @@ def train(
 	n_episode: int = 10e3,
 	verbose: int = 1,
 	early_stopping_threshold: int = None,
-	save_output: str = ""
+	save_output: str = "",
+	episode0: int = 0,
 ):
 	"""
 	Train the agent
@@ -31,7 +32,8 @@ def train(
 	verbose: The amount of verbose asked during the training.
 	early_stopping_threshold: If the system don't improve himself during this number of episode, stop the training
 	save_output: str, the path to the folder where the best and the last model. must end with '/' or be '' for saving in the current folder.
-
+	episode0: Only for fractionned call of the function with verbose, to not restart the episode count.
+	
 	Returns:
 	----
 	episode_lengths: The number of steps of every episodes
@@ -82,7 +84,7 @@ def train(
 
 			if color == _RED and train_reward > previous_train_reward:
 				color = _YELLOW
-			print(f"{color}Episode: {episode} | Average return: {last_train_reward:.2f} | Average episode length: {episode_length:.2f}\033[0m")
+			print(f"{color}Episode: {episode+episode0} | Average return: {last_train_reward:.2f} | Average episode length: {episode_length:.2f}\033[0m")
 
 			color = _RED
 			previous_train_reward = last_train_reward

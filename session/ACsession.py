@@ -155,7 +155,13 @@ class ACSession(Session):
 
             # Train the model
             gp_episode_lengths, gp_rewards, gp_max_train_reward, gp_best_model_episode = train(
-                self.env, self.agent, test_every, self._verbose, None, f"{self.output_folder}/step_{self._step}_{suffix}/group_{group}/"
+                self.env,
+                self.agent,
+                test_every,
+                self._verbose,
+                None,
+                f"{self.output_folder}/step_{self._step}_{suffix}/group_{group}/",
+                test_every*group
             )
 
             rewards.extend(gp_rewards)

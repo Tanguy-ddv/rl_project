@@ -33,10 +33,10 @@ class REINFORCESession(Session):
         return self._step
         
     def load_agent(
-            self,
-            policy_path: str = None,
-            lr_policy: float = 1e-3,
-            baseline: int = 0
+        self,
+        policy_path: str = None,
+        lr_policy: float = 1e-3,
+        baseline: int = 0
     ):
         """Load a new reinforce with baseline agent in the session."""
         # Load the policy
@@ -62,7 +62,7 @@ class REINFORCESession(Session):
                 print("Enable to fing the agent, created a new one instead.")
 
     
-    def train(self, n_episode: int = 10000, early_stopping_threshold: int = None):
+    def train(self, n_episode: int = 10000, early_stopping_threshold: int = None, episode0: int = 0):
         """
         Train the agent.
 
@@ -70,7 +70,8 @@ class REINFORCESession(Session):
         ----
         n_espisode: The number of maximum episodes of the training
         early_stopping_threshold: If the agent don't improve the cumulated reward during this number of episodes, stop the training.
-        
+        episode0: To be use only with verbose and fractionned training to not restart the episode count on printing.
+
         Return
         ----
         number_of_episodes: The number of episode of the training session (is n_episode with no early stopping)
@@ -83,7 +84,13 @@ class REINFORCESession(Session):
 
         # Train the model
         rewards, episode_lengths, final_rewards, states, max_train_reward = train(
-            self.env, self.agent, n_episode, self._verbose, early_stopping_threshold, f"{self.output_folder}/step_{self._step}_train/"
+            self.env,
+            self.agent,
+            n_episode,
+            self._verbose,
+            early_stopping_threshold,
+            f"{self.output_folder}/step_{self._step}_train/",
+            episode0
         )
         # Save the metrics
         self._save_metrics(rewards, final_rewards, states, episode_lengths, suffix='train')
@@ -96,15 +103,15 @@ class REINFORCESession(Session):
         """
         Train the agent with a baseline evolving.
         """
-        for baseline in baselines:
+        for (i,baseline) in enumerate(baselines):
             self.agent.baseline = baseline
-            self.train(n_episodes_per_baseline)
+            self.train(n_episodes_per_baseline, episode0=i*n_episodes_per_baseline)
     
     def train_agent_with_increasing_goal_baseline(self, n_episodes_per_step, n_step, first_baseline):
         """
         Train an agent with mutliple steps by defining the baseline as the maximum reward of the previous step
         """
         self.agent.baseline = first_baseline
-        for _ in range(n_step):
-            _, best_reward =self.train(n_episodes_per_step)
+        for i in range(n_step):
+            _, best_reward =self.train(n_episodes_per_step, episode0=i*n_episodes_per_step)
             self.agent.baseline = best_reward
