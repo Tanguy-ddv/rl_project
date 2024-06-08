@@ -9,10 +9,17 @@ import numpy as np
 import gym
 from gym import utils
 from .mujoco_env import MujocoEnv
+from typing import Literal
 
+SOURCE = 'CustomHopper-source-v0'
+TARGET = 'CustomHopper-target-v0'
 
 class CustomHopper(MujocoEnv, utils.EzPickle):
-    def __init__(self, domain=None):
+    """
+    The base class for all custom hoppers.
+    The torso mass of the hopper of domain='target' has a torso mass lightened by 1kg.
+    """
+    def __init__(self, domain: Literal['source', 'target']):
         MujocoEnv.__init__(self, 4)
         utils.EzPickle.__init__(self)
 
@@ -21,36 +28,32 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         if domain == 'source':  # Source environment has an imprecise torso mass (1kg shift)
             self.sim.model.body_mass[1] -= 1.0
 
-
-    def set_random_parameters(self):
-        """Set random masses"""
-        self.set_parameters(self.sample_parameters())
-
-
-    def sample_parameters(self):
-        """Sample masses according to a domain randomization distribution"""
-        
-        #
-        # TASK 6: implement domain randomization. Remember to sample new dynamics parameter
-        #         at the start of each training episode.
-        
+    
+    # Abstract method, do not call on the basic hopper (target)
+    def modify_parameters(self, **kwargs):
+        """
+        Modify the parameters of the env based on the kwargs values
+        """
         raise NotImplementedError()
-
-        return
 
 
     def get_parameters(self):
-        """Get value of mass for each link"""
-        masses = np.array( self.sim.model.body_mass[1:] )
+        """Get value of the modificable masses"""
+        masses = np.array(self.sim.model.body_mass[2:])
         return masses
+
+    def get_all_masses(self):
+        """Get the value of all the mass of the hopper."""
+        masses = np.array(self.sim.model.body_mass[1:])
+        return masses   
 
 
     def set_parameters(self, task):
         """Set each hopper link's mass to a new value"""
-        self.sim.model.body_mass[1:] = task
+        self.sim.model.body_mass[2:] = task
 
 
-    def step(self, a):
+    def step(self, a: np.ndarray):
         """Step the simulation to the next timestep
 
         Parameters
@@ -70,7 +73,6 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         ob = self._get_obs()
 
         return ob, reward, done, {}
-
 
     def _get_obs(self):
         """Get current state"""
@@ -120,29 +122,3 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
     def get_mujoco_state(self):
         """Returns current mjstate"""
         return self.sim.get_state()
-
-
-
-"""
-    Registered environments
-"""
-gym.envs.register(
-        id="CustomHopper-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
-)
-
-gym.envs.register(
-        id="CustomHopper-source-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
-        kwargs={"domain": "source"}
-)
-
-gym.envs.register(
-        id="CustomHopper-target-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
-        kwargs={"domain": "target"}
-)
-

@@ -7,7 +7,7 @@ import os
 from typing import Literal
 from abc import ABC, abstractmethod
 from time import time
-from env.custom_hopper import CustomHopper
+import env # Register all the envs here
 from agent.train_and_test import test
 import shutil
 
@@ -45,7 +45,7 @@ class Session(ABC):
             self._step = _find_last_step(output_folder)+1
 
         # Creation of the environment
-        self.env: CustomHopper = gym.make(env_path)
+        self.env: env.CustomHopper = gym.make(env_path)
 
         self.state_space = self.env.observation_space.shape[-1]
         self.action_space = self.env.action_space.shape[-1]

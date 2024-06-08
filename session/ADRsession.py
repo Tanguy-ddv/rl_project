@@ -9,17 +9,18 @@ from .ACsession import ACSession
 class ADRSession(ACSession):
 
     def __init__(
-            self,
-            ref_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
-            source_for_random_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
-            nenvs: int,
-            output_folder: str,
-            lr_actor: float = 1e-3,
-            lr_critic: float =1e-3,
-            lr_discriminator: float=1e-3,
-            lr_particle: float=1e-3,
-            verbose: int = 0,
-            device: Literal['cpu','cuda'] = 'cpu'):
+        self,
+        ref_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
+        source_for_random_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
+        nenvs: int,
+        output_folder: str,
+        lr_actor: float = 1e-3,
+        lr_critic: float =1e-3,
+        lr_discriminator: float=1e-3,
+        lr_particle: float=1e-3,
+        verbose: int = 0,
+        device: Literal['cpu','cuda'] = 'cpu'
+    ):
         
         super().__init__(ref_env_path, output_folder, verbose, device)
         self.load_agent(None, None, lr_actor, lr_critic)
@@ -73,13 +74,13 @@ class ADRSession(ACSession):
                 best_ref_reward = ref_reward
                 ep_of_best_ref_reward = episode
 
-            # Test and train on the random envs.
+            # Train on the random envs.
 
             rd_rewards = []
             for particle, env in zip(self.particles, self.envs):
 
                 parameters = particle.values
-                env.set_parameters(parameters)
+                env.modify_parameters(parameters)
                 _, log_probs = particle.update_values()
 
                 previous_states, actions, states, rd_reward, _, action_probabilities = perform(env, self.agent, True, False)

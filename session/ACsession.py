@@ -8,7 +8,6 @@ from time import time
 import os
 
 from agent.train_and_test import train, test
-import shutil
 
 import torch
 import gym
