@@ -53,6 +53,7 @@ class ActorCriticAgent(Agent):
 
         # Compute the losses
         actor_loss = -(action_log_probs * advantage.detach()).mean()
+        actor_loss.requires_grad_()
         critic_loss = F.mse_loss(state_values, target_values)
 
         # Update the actor

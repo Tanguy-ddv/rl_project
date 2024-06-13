@@ -5,6 +5,7 @@ from .discriminator import Discriminator
 import torch 
 import json
 import gym
+import os
 from agent.train_and_test import performPPO
 
 class ADRCallback(BaseCallback):
@@ -62,12 +63,12 @@ class ADRCallback(BaseCallback):
         """Action to be done at each step."""
 
         # Retrieve the data
-        previous_state = self.locals['obs_tensor'][0].numpy()
-        state = self.locals['new_obs'][0]
-        action = self.locals['actions'][0]
-        reward = self.locals['rewards'][0]
-        log_probs = self.locals['log_probs'].detach()
-        done = self.locals['dones'][0]
+        previous_state = self.locals['obs_tensor'][0].numpy() # np.ndarray
+        state = self.locals['new_obs'][0] # np.ndarray
+        action = self.locals['actions'][0] # np.ndarray
+        reward = self.locals['rewards'][0] # float
+        log_probs = self.locals['log_probs'].detach() # float
+        done = self.locals['dones'][0] # bool
 
         # Store them
         self.states.append(state)
@@ -81,7 +82,7 @@ class ADRCallback(BaseCallback):
             if self.__current_env == self.nenvs-1: 
                 
                 ref_reward = 0
-                previous_states, actions, states, ref_reward, episode_length = performPPO(self.ref_env, self.model, False, False)
+                previous_states, actions, states, ref_reward, episode_length = performPPO(self.ref_env, self.model, False)
 
                 for (previous_state, state, action) in zip(previous_states, states, actions): 
                     # The done and the reward and the log_probs are not used on the training of the discriminator so we put whatever we want
