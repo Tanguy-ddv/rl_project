@@ -1,7 +1,5 @@
-from typing import Literal
 from .custom_hopper import CustomHopper
 import numpy as np
-import gym
 
 ADR = 'ADRHopper-v0'
 UDR = 'UDRHopper-v0'

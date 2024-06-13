@@ -1,5 +1,5 @@
 from .custom_hopper import CustomHopper, SOURCE, TARGET
-from .random_hoppers import ADR, UDR, NDR
+from .random_hoppers import ADR, UDR, NDR, ADRHopper, UDRHopper, NDRHopper
 
 import gym
 gym.envs.register(

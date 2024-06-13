@@ -1,3 +1,4 @@
 from .discriminator import Discriminator
 from .particle import Particle
-__all__ = ['Particle', 'Discriminator']
+from .callback import ADRCallback
+__all__ = ['Particle', 'Discriminator', 'ADRCallback']

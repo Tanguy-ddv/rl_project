@@ -4,4 +4,5 @@ The train test submodul contain functions to train, test and perform episodes fo
 from .perform import perform
 from .train import train
 from .test import test
-__all__ = ["perform", "train", "test"]
+from .perform_ppo import performPPO
+__all__ = ["perform", "train", "test", "performPPO"]

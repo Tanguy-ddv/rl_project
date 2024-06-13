@@ -55,10 +55,10 @@ class ACSession(Session):
         
         self.infos = {'lr_actor' : lr_actor, 'lr_critic' : lr_critic}
     
-    def load_last_agent(self, lr_actor: float=1e-3, lr_critic:float=1e-3, best:bool = True):
+    def load_last_agent(self, lr_actor: float=1e-3, lr_critic:float=1e-3, best:bool = True, last_suffix = 'train'):
         best = "best_" if best else ""
-        actor_path = f"{self.output_folder}/step_{self._step-1}_train/{best}model.mdl"
-        critic_path =  f"{self.output_folder}/step_{self._step-1}_train/{best}critic.mdl"
+        actor_path = f"{self.output_folder}/step_{self._step-1}_{last_suffix}/{best}model.mdl"
+        critic_path =  f"{self.output_folder}/step_{self._step-1}_{last_suffix}/{best}critic.mdl"
         try:
             self.load_agent(actor_path, critic_path, lr_actor, lr_critic)
         except FileNotFoundError:
@@ -170,8 +170,8 @@ class ACSession(Session):
                 best_model_episode = gp_best_model_episode
             
             # Test the model
-            gp_rewards, _, _ = test(test_env, self.agent, nb_test, False, seed)
-            test_rewards.append(sum(gp_rewards)/nb_test)
+            test_rewards, _, _ = test(test_env, self.agent, nb_test, False, seed)
+            test_rewards.append(sum(test_rewards)/nb_test)
         
         self._save_metrics(rewards, episode_lengths, suffix, best_model_episode, {'test_reward':test_rewards})
         print(f"End of session step {self._step}, Lasted {(time() - starting_time):.2f} s, Best reward: {max_train_reward:.2f}")

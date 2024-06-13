@@ -65,7 +65,7 @@ class Discriminator(Agent):
 
     def reward(self, states: list[torch.Tensor], actions: list[torch.Tensor], next_states: list[torch.Tensor]):
         probs = self.policy(separate_trajectory(states, actions, next_states))
-        return torch.log(probs.mean())
+        return torch.log(probs.mean()).item()
     
     def update_policy(self):
 

@@ -14,6 +14,7 @@ def discount_rewards(r, gamma):
 class Agent(ABC):
 
     def __init__(self, policy: Policy, device='cpu', lr: float = 1e-3, gamma: float=0.99):
+        super().__init__()
         self.device = device
         self.policy = policy.to(self.device)
         self.policy_optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)

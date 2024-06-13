@@ -6,12 +6,12 @@ from agent.train_and_test import perform
 import json
 from .ACsession import ACSession
 
-class ADRSession(ACSession):
+class ACADRSession(ACSession):
 
     def __init__(
         self,
         ref_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
-        source_for_random_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
+        random_env_path: Literal['CustomHopper-source-v0','CustomHopper-target-v0'],
         nenvs: int,
         output_folder: str,
         lr_actor: float = 1e-3,
@@ -28,7 +28,7 @@ class ADRSession(ACSession):
 
         self.discriminator = Discriminator(self.state_space, self.action_space, hidden=64, lr=lr_discriminator)
 
-        self.mean_values = self.env.get_parameters()[1:]
+        self.mean_values = self.env.get_parameters()
         self.nparams = self.mean_values.shape[0]
 
         # Load the particles
@@ -37,9 +37,9 @@ class ADRSession(ACSession):
         self.envs: list[CustomHopper] = []
         for _ in range(nenvs):
             self.particles.append(Particle(self.nparams, self.mean_values, hidden=64, lr=lr_particle))
-            self.envs.append(gym.make(source_for_random_env_path))
+            self.envs.append(gym.make(random_env_path))
     
-    def _save_metrics(self, ref_rewards: list[float], rd_rewards: list[float], episode_lengths: list[float | int], suffix: str, episode_of_best: int = None):
+    def _save_metrics(self, ref_rewards: list[float], rd_rewards: list[float], episode_lengths: list[int], suffix: str, episode_of_best: int = None):
         super()._save_metrics(ref_rewards, episode_lengths, suffix, episode_of_best)
     
         with open(f"{self.output_folder}/step_{self._step}_{suffix}/random_rewards.json",'w') as f:

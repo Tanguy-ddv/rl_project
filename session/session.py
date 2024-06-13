@@ -91,11 +91,13 @@ class Session(ABC):
 
         self._make_step_dir(suffix)
 
-        with open(f"{self.output_folder}/step_{self._step}_{suffix}/rewards.json",'w') as f:
-            json.dump(rewards, f)
+        if rewards is not None:
+            with open(f"{self.output_folder}/step_{self._step}_{suffix}/rewards.json",'w') as f:
+                json.dump(rewards, f)
 
-        with open(f"{self.output_folder}/step_{self._step}_{suffix}/episode_lengths.json",'w') as f:
-            json.dump(episode_lengths, f)
+        if episode_lengths is not None:
+            with open(f"{self.output_folder}/step_{self._step}_{suffix}/episode_lengths.json",'w') as f:
+                json.dump(episode_lengths, f)
         
         if episode_of_best is not None:
             with open(f"{self.output_folder}/step_{self._step}_{suffix}/episode_of_best.json",'w') as f:
@@ -131,7 +133,7 @@ class Session(ABC):
         )
         
         print(f"Average reward: {(sum(rewards)/n_episode):.2f} | Average episode Length: {(sum(episode_lengths)/n_episode):.2f} | Maximum train reward: {max_train_reward:.2f}")
-        self._save_metrics(rewards, rewards, episode_lengths, suffix='test')
+        self._save_metrics(rewards, episode_lengths, suffix='test')
         print(f"End of session step {self._step}, lasted {(time() - starting_time):.2f} s")
         self._step += 1
     

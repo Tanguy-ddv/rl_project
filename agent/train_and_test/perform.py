@@ -16,7 +16,6 @@ def perform(env, agent: Agent, store: bool = True, render: bool = False
 	----
 	env: The gym environment
 	agent: the REINFORCE or Actor-Critic agent to train one episode.
-	initial_state: the state of the env at the very beginning, should be obtain previously via env.reset()
 	store: if True, store the episode outcome on the agent history, else don't.
 	render: if True, show the agent performing on the env.
 
