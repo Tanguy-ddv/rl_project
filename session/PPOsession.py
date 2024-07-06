@@ -2,7 +2,9 @@ from typing import Literal
 from .session import Session
 from stable_baselines3 import PPO
 import gym
+import os
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 
 class PPOSession(Session):
 
@@ -19,6 +21,7 @@ class PPOSession(Session):
             self.agent = PPO.load(path, self.env, device = self.device)
         
         self.infos = ppo_kwargs
+        self.callback = None
         
     def load_last_agent(self):
         actor_path = f"{self.output_folder}/step_{self._step-1}_train/model.mdl"
@@ -27,13 +30,22 @@ class PPOSession(Session):
         except FileNotFoundError:
             raise ValueError("Enable to fing the agent, please verify the path and try again.")
     
+    def load_callback(self, callback_class, **kwargs):
+        """
+        Load a callback for the training. Erase the previous callback. Please load an agent before loading the callback.
+        Please load a new callback before each training.
+        """
+        output_folder = f"{self.output_folder}/step_{self._step-1}_train"
+        self.callback = callback_class(model=self.agent, output_folder=output_folder, verbose=self._verbose, **kwargs)
+    
     def train(self, total_timesteps):
         """
         Train the PPO agent for a fixed number of timesteps
         BE CAREFUL, other agent are trained with a number of EPISODE,
         to retrieve the number of time steps, use the episode lengths.
         """
-        self.agent.learn(total_timesteps=total_timesteps)
+        os.mkdir(f"{self.output_folder}/step_{self._step}_train")
+        self.agent.learn(total_timesteps=total_timesteps, callback=self.callback)
         self._step += 1
     
     def test(self, n_episodes: int, env_path:str = None):
