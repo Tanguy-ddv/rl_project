@@ -3,7 +3,7 @@ import numpy as np
 
 ADR = 'ADRHopper-v0'
 UDR = 'UDRHopper-v0'
-NDR = 'NDRHopper-v0'
+NDR = 'GDRHopper-v0'
 
 class UDRHopper(CustomHopper):
 
@@ -26,7 +26,8 @@ class UDRHopper(CustomHopper):
             upper = 2*self.params
         self.set_parameters(np.random.uniform(lower, upper))
 
-class NDRHopper(CustomHopper):
+class GDRHopper(CustomHopper):
+    """A gaussian domain randomization hopper."""
 
     def __init__(self):
         super().__init__('source')
@@ -42,6 +43,7 @@ class NDRHopper(CustomHopper):
         self.set_parameters(np.random.normal(means, stds))
 
 class ADRHopper(CustomHopper):
+    """An active domain randomization hopper."""
         
     def __init__(self):
         super().__init__('source')

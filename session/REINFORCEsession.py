@@ -5,14 +5,10 @@ Create a session and call its methods to create, train and test an agent.
 
 from typing import Literal
 from time import time
-import shutil
 
-from agent.train_and_test import train, test
+from agent.train_and_test.train import train
 
 import torch
-import gym
-import json
-import os
 
 from env.custom_hopper import *
 from agent.reinforce_agent import ReinforceAgent, Policy
@@ -51,7 +47,7 @@ class REINFORCESession(Session):
         
         self.infos = {'lr_policy' : lr_policy, 'baseline' : baseline}
 
-    def load_last(self, lr_policy: float = 1e-3, baseline: int = 0, best:bool = True):
+    def load_last_agent(self, lr_policy: float = 1e-3, baseline: int = 0, best:bool = True):
         best = "best_" if best else ""
         policy_path = f"self.output_folder/step_{self._step-1}_train/{best}model.mdl"
         try:
@@ -83,7 +79,7 @@ class REINFORCESession(Session):
         starting_time = time()
 
         # Train the model
-        rewards, episode_lengths, final_rewards, states, max_train_reward = train(
+        episode_lengths, rewards, max_train_reward, best_model_episode = train(
             self.env,
             self.agent,
             n_episode,
@@ -93,13 +89,13 @@ class REINFORCESession(Session):
             episode0
         )
         # Save the metrics
-        self._save_metrics(rewards, final_rewards, states, episode_lengths, suffix='train')
+        self._save_metrics(rewards, episode_lengths, suffix='train', episode_of_best=best_model_episode)
 
         print(f"End of session step {self._step}, Lasted {(time() - starting_time):.2f} s, Best reward: {max_train_reward:.2f}")
         self._step += 1
         return episode_lengths, max_train_reward
 
-    def train_agent_with_defined_moving_baseline(self, n_episodes_per_baseline: int, baselines: list[int | float]):
+    def train_agent_with_defined_moving_baseline(self, n_episodes_per_baseline: int, baselines: list[float]):
         """
         Train the agent with a baseline evolving.
         """

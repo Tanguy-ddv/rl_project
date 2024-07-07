@@ -1,5 +1,5 @@
 from .custom_hopper import CustomHopper, SOURCE, TARGET
-from .random_hoppers import ADR, UDR, NDR, ADRHopper, UDRHopper, NDRHopper
+from .random_hoppers import ADR, UDR, NDR, ADRHopper, UDRHopper, GDRHopper
 
 import gym
 gym.envs.register(
@@ -10,7 +10,7 @@ gym.envs.register(
 
 gym.envs.register(
     id=NDR,
-    entry_point="%s:NDRHopper" % __name__,
+    entry_point="%s:GDRHopper" % __name__,
     max_episode_steps=500,
 )
 

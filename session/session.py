@@ -10,6 +10,8 @@ from time import time
 import env # Register all the envs here
 from agent.train_and_test import test
 import shutil
+import matplotlib.pyplot as plt
+from rolling_avg import rolling_avg
 
 import gym
 
@@ -143,3 +145,19 @@ class Session(ABC):
         Train the agent.
         """
         raise NotImplementedError()
+
+    def plot_metric(self, metric: str, steps: list, n_avg = 100, suffix='train', y_scale_log: bool = False):
+        """Plot a metric cumulated over several episodes."""
+
+        fig, ax = plt.subplots(1,1)
+        for step in steps:
+            dir = self.output_folder + f'/step_{step}_{suffix}/'
+            with open(dir + f'{metric}.json') as f:
+                rewards = json.load(f)
+            averaged_rewards = rolling_avg(rewards, n_avg)
+            ax.plot(range(0, len(averaged_rewards)*n_avg, n_avg), averaged_rewards)
+        ax.set_xlabel("Episode")
+        ax.set_ylabel(f"Mean of {metric} over {n_avg} episodes")
+        if y_scale_log:
+            ax.set_yscale('log')
+        return fig, ax
