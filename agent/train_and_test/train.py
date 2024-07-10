@@ -7,6 +7,7 @@ import torch
 
 from ..actor_critic_agent import Agent, ActorCriticAgent
 from .perform import perform
+import shutil
 
 _RED = "\033[1;31;40m"
 _GREEN = "\033[1;32;40m"
@@ -20,6 +21,7 @@ def train(
 	early_stopping_threshold: int = None,
 	save_output: str = "",
 	episode0: int = 0,
+	previous_max_train_reward: float = None
 ):
 	"""
 	Train the agent
@@ -46,7 +48,7 @@ def train(
 	# Initilisation for the data measurement.
 	rewards = []
 	episode_lengths = []
-	max_train_reward = None
+	max_train_reward = previous_max_train_reward
 
 	# Only for printing the evolution.
 	previous_train_reward = 0
@@ -96,6 +98,5 @@ def train(
 		torch.save(agent.policy.state_dict(), save_output + "model.mdl")
 		if isinstance(agent, ActorCriticAgent):
 			torch.save(agent.critic.state_dict(), save_output + "critic.mdl")
-
 	
 	return episode_lengths, rewards, max_train_reward, best_model_episode

@@ -8,18 +8,21 @@ class TrainTestCallback(BaseCallback):
 
     def __init__(
         self,
-        test_env_path: str,
         model: PPO,
-        test_every: int,
         output_folder: str,
-
+        test_env_path: str = None,
+        test_every: int = None,
+        max_episode: int = None,
         verbose: int = 0
     ):
         super().__init__(verbose)
-
-        self.test_env = gym.make(test_env_path)
+        if test_env_path is not None:
+            self.test_env = gym.make(test_env_path)
+        else:
+            self.test_env = None
         self.output_folder = output_folder
         self.test_every = test_every
+        self.max_episode = max_episode
 
         self.init_callback(model)
 
@@ -35,7 +38,8 @@ class TrainTestCallback(BaseCallback):
         self.current_reward = 0
     
     def update_rolling_number(self):
-        self._rolling_number = (self._rolling_number+1)%self.test_every
+        if self.test_every is not None:
+            self._rolling_number = (self._rolling_number+1)%self.test_every
 
     def _on_step(self):
         """Action to be done at each step."""
@@ -50,7 +54,7 @@ class TrainTestCallback(BaseCallback):
 
         if done: # If the episode is over.
             # Test the agent every test_every episode.
-            if self._rolling_number == self.test_every-1: 
+            if self.test_every is not None and self._rolling_number == self.test_every-1: 
 
                 test_reward, _  = evaluate_policy(self.model, self.test_env, 10)
                 self.test_rewards.append(test_reward)
@@ -62,16 +66,18 @@ class TrainTestCallback(BaseCallback):
             self.episode_lengths.append(self.current_episode_length)
             self.current_reward = 0
             self.current_episode_length = 0
+
+            print(f"\r {len(self.train_rewards)} episodes completed.", end='')
     
-        return True
+        return self.max_episode is None or len(self.train_rewards) < self.max_episode
         
     def _on_training_end(self):
         """
         At the end of the training, we save the metrics.
         """
-
-        with open(f"{self.output_folder}/test_rewards.json",'w') as f:
-            json.dump(self.test_rewards, f)
+        if self.test_rewards:
+            with open(f"{self.output_folder}/test_rewards.json",'w') as f:
+                json.dump(self.test_rewards, f)
         
         with open(f"{self.output_folder}/train_rewards.json",'w') as f:
             json.dump(self.train_rewards, f)

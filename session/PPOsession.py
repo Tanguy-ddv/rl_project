@@ -30,14 +30,16 @@ class PPOSession(Session):
         except FileNotFoundError:
             raise ValueError("Enable to fing the agent, please verify the path and try again.")
     
-    def load_callback(self, callback_class, **kwargs):
+    def load_callback(self, callback_class=None, **kwargs):
         """
         Load a callback for the training. Erase the previous callback. Please load an agent before loading the callback.
-        Please load a new callback before each training.
+        Please reload a new callback before each training.
         """
-        output_folder = f"{self.output_folder}/step_{self._step-1}_train"
+        if callback_class is None:
+            self.callback = None
+        output_folder = f"{self.output_folder}/step_{self._step}_train"
         self.callback = callback_class(model=self.agent, output_folder=output_folder, verbose=self._verbose, **kwargs)
-    
+
     def train(self, total_timesteps):
         """
         Train the PPO agent for a fixed number of timesteps
@@ -46,6 +48,7 @@ class PPOSession(Session):
         """
         os.mkdir(f"{self.output_folder}/step_{self._step}_train")
         self.agent.learn(total_timesteps=total_timesteps, callback=self.callback)
+        self.agent.save(f"{self.output_folder}/step_{self._step}_train/model.mdl")
         self._step += 1
     
     def test(self, n_episodes: int, env_path:str = None):

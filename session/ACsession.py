@@ -57,16 +57,20 @@ class ACSession(Session):
     
     def load_last_agent(self, lr_actor: float=1e-3, lr_critic:float=1e-3, best:bool = True, last_suffix = 'train'):
         best = "best_" if best else ""
-        actor_path = f"{self.output_folder}/step_{self._step-1}_{last_suffix}/{best}model.mdl"
-        critic_path =  f"{self.output_folder}/step_{self._step-1}_{last_suffix}/{best}critic.mdl"
+        i = self._step
+        while not os.path.exists(f"{self.output_folder}/step_{i}_{last_suffix}/{best}model.mdl") and i > 0:
+            i -= 1
+        actor_path = f"{self.output_folder}/step_{i}_{last_suffix}/{best}model.mdl"
+        critic_path =  f"{self.output_folder}/step_{i}_{last_suffix}/{best}critic.mdl"
         try:
             self.load_agent(actor_path, critic_path, lr_actor, lr_critic)
+            print(f'best AC of step {i} just loaded')
         except FileNotFoundError:
             self.load_agent(None, None, lr_actor, lr_critic)
             if self._verbose:
-                print("Enable to fing the agent, created a new one instead.")
+                print("Unable to find the agent, created a new one instead.")
     
-    def train(self, n_episode: int = 10000, early_stopping_threshold: int = None):
+    def train(self, n_episode: int = 10000, early_stopping_threshold: int = None, previous_best_reward: float = None):
         """
         Train the agent.
 
@@ -87,7 +91,13 @@ class ACSession(Session):
 
         # Train the model
         episode_lengths, rewards, max_train_reward, best_model_episode = train(
-            self.env, self.agent, n_episode, self._verbose, early_stopping_threshold, f"{self.output_folder}/step_{self._step}_train/"
+            self.env,
+            self.agent,
+            n_episode,
+            self._verbose,
+            early_stopping_threshold,
+            f"{self.output_folder}/step_{self._step}_train/",
+            previous_max_train_reward=previous_best_reward
         )
         # Save the metrics
         self._save_metrics(rewards, episode_lengths, 'train', best_model_episode)
@@ -108,6 +118,7 @@ class ACSession(Session):
         """
         total_episodes = 0
         nb_restarts = 0
+        best_reward = None
         n_episodes += early_stopping_threshold
         while total_episodes<n_episodes - early_stopping_threshold and nb_restarts < max_nb_restarts:
             
@@ -119,7 +130,7 @@ class ACSession(Session):
                     best=True
                 )
             # Train it again until the threshold is reached
-            this_step_n_episodes, _ = self.train(n_episodes - total_episodes, early_stopping_threshold)
+            this_step_n_episodes, best_reward = self.train(n_episodes - total_episodes, early_stopping_threshold, best_reward)
             total_episodes += this_step_n_episodes - early_stopping_threshold
             nb_restarts+=1
             print(f"Still {n_episodes - total_episodes - early_stopping_threshold} to go")

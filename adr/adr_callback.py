@@ -38,7 +38,7 @@ class ADRCallback(BaseCallback):
         
         self.__current_env = 0
         
-        # No get_parameters on DummyVecEnv so have to get the values ourself.
+        # No get_parameters on DummyVecEnv so have to get the values this way.
         self.mean_values = self.training_env.envs[0].get_parameters()
         self.nparams = self.mean_values.shape[0]
 
@@ -128,13 +128,16 @@ class ADRCallback(BaseCallback):
             self.episode_lengths.append(self.current_episode_length)
             self.current_reward = 0
             self.current_episode_length = 0
-    
+        
+            print(f"\r {len(self.episode_lengths)} episodes completed.", end='')
+
         return True
         
     def _on_training_end(self):
         """
         At the end of the training, we save the metrics.
         """
+        print("h")
 
         with open(f"{self.output_folder}/ref_rewards.json",'w') as f:
             json.dump(self.ref_rewards, f)

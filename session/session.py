@@ -156,8 +156,12 @@ class Session(ABC):
                 rewards = json.load(f)
             averaged_rewards = rolling_avg(rewards, n_avg)
             ax.plot(range(0, len(averaged_rewards)*n_avg, n_avg), averaged_rewards)
-        ax.set_xlabel("Episode")
-        ax.set_ylabel(f"Mean of {metric} over {n_avg} episodes")
+        ax.set_xlabel("Episode", fontsize=13)
+        ax.set_ylabel(f"Mean of {metric} over {n_avg} episodes", fontsize=13)
+        ax.set_xlabel("Episode", fontsize=13)
+        ax.tick_params(axis='both', labelsize=12)
+        if len(steps) > 1:
+            ax.legend(fontsize=12)
         if y_scale_log:
             ax.set_yscale('log')
         return fig, ax
