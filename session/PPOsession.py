@@ -21,7 +21,8 @@ class PPOSession(Session):
             self.agent = PPO.load(path, self.env, device = self.device)
         
         self.infos = ppo_kwargs
-        self.callback = None
+        self.callbacks = []
+        
         
     def load_last_agent(self):
         actor_path = f"{self.output_folder}/step_{self._step-1}_train/model.mdl"
@@ -30,15 +31,12 @@ class PPOSession(Session):
         except FileNotFoundError:
             raise ValueError("Enable to fing the agent, please verify the path and try again.")
     
-    def load_callback(self, callback_class=None, **kwargs):
+    def load_callback(self, callback_class, **kwargs):
         """
-        Load a callback for the training. Erase the previous callback. Please load an agent before loading the callback.
-        Please reload a new callback before each training.
+        Add a new callback for the training. At the end of the training, clear the callback list.
         """
-        if callback_class is None:
-            self.callback = None
         output_folder = f"{self.output_folder}/step_{self._step}_train"
-        self.callback = callback_class(model=self.agent, output_folder=output_folder, verbose=self._verbose, **kwargs)
+        self.callbacks.append(callback_class(model=self.agent, output_folder=output_folder, verbose=self._verbose, **kwargs))
 
     def train(self, total_timesteps):
         """
@@ -47,9 +45,10 @@ class PPOSession(Session):
         to retrieve the number of time steps, use the episode lengths.
         """
         os.mkdir(f"{self.output_folder}/step_{self._step}_train")
-        self.agent.learn(total_timesteps=total_timesteps, callback=self.callback)
+        self.agent.learn(total_timesteps=total_timesteps, callback=CallbackList(self.callbacks))
         self.agent.save(f"{self.output_folder}/step_{self._step}_train/model.mdl")
         self._step += 1
+        self.callbacks.clear()
     
     def test(self, n_episodes: int, env_path:str = None):
         """

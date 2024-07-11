@@ -1,5 +1,5 @@
 from typing import Literal
-from adr import Discriminator, Particle
+from domain_randomization import Discriminator, Particle
 import gym
 from env.custom_hopper import CustomHopper
 from agent.train_and_test import perform

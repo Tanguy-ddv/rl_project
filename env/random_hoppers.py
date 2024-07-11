@@ -20,7 +20,7 @@ class UDRHopper(CustomHopper):
             lower = np.ones_like(self.params)*lowerbound
         else:
             lower = np.zeros_like(self.params)
-        if upper is not None:
+        if upperbound is not None:
             upper = np.ones_like(self.params)*upperbound
         else:
             upper = 2*self.params
