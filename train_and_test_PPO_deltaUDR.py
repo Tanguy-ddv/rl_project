@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import PPO
-from env.custom_randomized_hopper import register_uniform_with_delta
+from env import *
+from domain_randomization.callbacks import UDRCallback
 
 seed_value = 42
 deltas = [0.25, 0.5, 0.75]
@@ -22,19 +23,17 @@ def main():
     results_file_path = os.path.join(models_dir, "result.txt")
     with open(results_file_path, "a") as results_file:
         for delta in deltas:
-            name = f"CustomHopper-uniform-with_delta-{delta}-v0"
-            register_uniform_with_delta(delta, name=name)
             
-            random_source_env = gym.make(name)
+            random_source_env = gym.make(UDR)
             random_source_env.seed(seed_value)
             
             model = PPO("MlpPolicy", env=random_source_env, device='cpu', verbose=0, seed=seed_value)
-            
+            callback = UDRCallback(model, delta=delta)
             test_env_target = gym.make('CustomHopper-target-v0')
             test_env_target.seed(seed_value)
 
             for timestep in timesteps:
-                model.learn(total_timesteps=eval_freq, reset_num_timesteps=False)
+                model.learn(total_timesteps=eval_freq, reset_num_timesteps=False, callback=callback)
 
                 mean_reward, _ = evaluate_policy(model, test_env_target, n_eval_episodes=n_episodes, render=False)
                 results[delta].append(mean_reward)

@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import PPO
-from env.custom_randomized_hopper import register_normal
+from env import *
+from domain_randomization.callbacks import GDRCallback
 
 seed_value = 42
 
@@ -22,10 +23,8 @@ def main():
     results_file_path = os.path.join(models_dir, f"mean_rewards_seed:{seed_value}.txt")
 
     for std_dev in std_devs:
-        name = f"CustomHopper-normal-with_std_dev-{std_dev}-v0"
-        register_normal(std_dev, name=name)
 
-        random_source_env = gym.make(name)
+        random_source_env = gym.make(NDR)
         random_source_env.seed(seed_value)
 
         model_dir = f"ppo_source_NDR_ep:{total_timesteps}_stdev:{std_dev}_nEpEval:{n_episodes}_seed:{seed_value}"
@@ -33,7 +32,8 @@ def main():
 
         if not os.path.exists(model_path):
             model_standard = PPO("MlpPolicy", env=random_source_env, device='cpu', verbose=0, seed=seed_value)
-            model_standard.learn(total_timesteps=total_timesteps)
+            callback = GDRCallback(model_standard, delta=std_dev)
+            model_standard.learn(total_timesteps=total_timesteps, callback=callback)
             model_standard.save(model_path)
 
             model = PPO.load(model_path)

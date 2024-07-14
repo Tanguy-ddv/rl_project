@@ -6,10 +6,10 @@ from stable_baselines3.common.callbacks import BaseCallback
 class UDRCallback(BaseCallback):
     """Only to use on UDRHopper."""
 
-    def __init__(self, model: PPO, output_folder: str = "", upperbound: float = None, lowerbound: float = None, verbose: int = 0 ):
+    def __init__(self, model: PPO, output_folder: str = "", delta: float = 1, verbose=0):
         super().__init__(verbose)
-        self.upperbound = upperbound
-        self.lowerbound = lowerbound
+        self.delta = delta
+
 
         self.init_callback(model)
 
@@ -18,16 +18,16 @@ class UDRCallback(BaseCallback):
         done = self.locals['dones'][0] # bool
         if done:
             # We randomise the environement.
-            self.training_env.envs[0].modify_parameters(upperbound= self.upperbound, lowerbound = self.lowerbound)
+            self.training_env.envs[0].modify_parameters(self.delta)
 
         return True
 
 class GDRCallback(BaseCallback):
     """Only to use on GDRHopper"""
 
-    def __init__(self, model: PPO, output_folder: str = "", sigma: float = 0.2, verbose: int = 0, ):
+    def __init__(self, model: PPO, output_folder: str = "", delta: float = 0.2, verbose: int = 0, ):
         super().__init__(verbose)
-        self.sigma = sigma
+        self.delta = delta
 
         self.init_callback(model)
 
@@ -36,7 +36,7 @@ class GDRCallback(BaseCallback):
         done = self.locals['dones'][0] # bool
         if done:
             # We randomise the environement.
-            self.training_env.envs[0].modify_parameters(sigma=self.sigma)
+            self.training_env.envs[0].modify_parameters(delta=self.delta)
         
         return True
     

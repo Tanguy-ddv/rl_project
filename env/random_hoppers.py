@@ -12,18 +12,13 @@ class UDRHopper(CustomHopper):
 
         self.params = self.get_parameters()
     
-    def modify_parameters(self, upperbound: float = None, lowerbound: float = None):
+    def modify_parameters(self, delta: float = 1):
         """
-        Sample new parameters with a uniform distribution.
+        Sample new parameters with a uniform distribution [(1-delta)*initial_values, (1+delta)*initial_values].
         """
-        if lowerbound is not None:
-            lower = np.ones_like(self.params)*lowerbound
-        else:
-            lower = np.zeros_like(self.params)
-        if upperbound is not None:
-            upper = np.ones_like(self.params)*upperbound
-        else:
-            upper = 2*self.params
+
+        upper = (1+delta)*self.params
+        lower = (1-delta)*self.params
         self.set_parameters(np.random.uniform(lower, upper))
 
 class GDRHopper(CustomHopper):
@@ -34,12 +29,12 @@ class GDRHopper(CustomHopper):
 
         self.params = self.get_parameters()
 
-    def modify_parameters(self, sigma: float = 0.2):
+    def modify_parameters(self, delta: float = 0.2):
         """
-        Sample new parameters with a normal distribution (means=initial_values, std=initial_values*sigma) .
+        Sample new parameters with a normal distribution (means=initial_values, std=initial_values*delta) .
         """
         means = self.params
-        stds = self.params*sigma
+        stds = self.params*delta
         self.set_parameters(np.random.normal(means, stds))
 
 class ADRHopper(CustomHopper):
