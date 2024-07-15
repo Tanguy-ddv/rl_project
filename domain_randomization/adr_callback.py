@@ -137,7 +137,6 @@ class ADRCallback(BaseCallback):
         """
         At the end of the training, we save the metrics.
         """
-        print("h")
 
         with open(f"{self.output_folder}/ref_rewards.json",'w') as f:
             json.dump(self.ref_rewards, f)
