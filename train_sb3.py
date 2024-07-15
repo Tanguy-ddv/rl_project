@@ -6,14 +6,12 @@
 """
 import gym
 import numpy
-numpy.save
-from env.custom_randomized_hopper import *
+from env import *
 
 from stable_baselines3 import PPO
-register_uniform(1,4, "testuniform-v0")
 
 def main():
-    train_env = gym.make("CustomHopper-uniform-v0")
+    train_env = gym.make("CustomHopper-source-v0")
 
     print('State space:', train_env.observation_space)  # state-space
     print('Action space:', train_env.action_space)  # action-space

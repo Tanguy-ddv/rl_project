@@ -1,3 +1,0 @@
-Step 0: Reinforce, 20k episodes, early stopping=100, 10k trials
-Step 230: Reinforce, 20k episodes, early stopping=100, 10k trials
-Step 463: Reinforce, 20k episodes, early stopping=100, 10k trials
