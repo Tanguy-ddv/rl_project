@@ -16,6 +16,8 @@ Machine Learning and Deep Learning course, Spring semester 2024.
 The code presented here doesn't stick to the provided template. In order to make it easier to deal with multi-step training and data saving, a wrapper class named 'Session' has been created.
 In one single session, it is easy to train one, or multiple agents, load, reload and save models, as well as keep track on the metrics. The main part of the codes are the train.py and test_agent.py functions, that are called at nearly every steps. The student is able to interact with the session using its methods
 
+A detailed explanation of the project's structure, approach, and results is provided in the project report, which can be found in the PDF file named s282575_s331543_s321277_SUPPA_PERRUCCI_DUGASDUVILLARD.pdf.
+
 ## Tasks
 
 ### Reinforce and AC
